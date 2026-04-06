@@ -370,7 +370,7 @@ describe("Balance Validation", () => {
     }
   });
 
-  test("returns INVALID_TYPE error for unknown customer", () => {
+  test("returns NOT_FOUND error for unknown customer", () => {
     const order = { ...validBuyOrder(), customer_id: "UNKNOWN" };
     const result = validateOrder(order);
 
@@ -379,7 +379,7 @@ describe("Balance Validation", () => {
       expect(result.errors).toContainEqual(
         expect.objectContaining({
           field: "customer_id",
-          code: ValidationErrorCode.INVALID_TYPE,
+          code: ValidationErrorCode.NOT_FOUND,
           message: expect.stringContaining("Customer not found"),
         }),
       );
@@ -564,8 +564,6 @@ describe("Security & Edge Cases", () => {
   test("accepts numeric customer_id at structure validation", () => {
     const order = { ...validBuyOrder(), customer_id: 12345 };
     const result = validateOrder(order);
-
-    console.log('errors', result)
   
     expect(result.valid).toBe(true);
     if (result.valid) {

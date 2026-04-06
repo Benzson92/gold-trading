@@ -5,6 +5,7 @@ import { SpreadDetail } from "./spread.types";
 export enum ValidationErrorCode {
   MISSING_FIELD = "MISSING_FIELD",
   INVALID_TYPE = "INVALID_TYPE",
+  NOT_FOUND = "NOT_FOUND",
 
   INVALID_QUANTITY = "INVALID_QUANTITY",
   INVALID_PRICE = "INVALID_PRICE",

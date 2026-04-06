@@ -1,5 +1,6 @@
 
 export { validateInputStructure } from "./validate-input-structure";
+export { validateCustomer } from "./validate-customer";
 export { validateQuantity } from "./validate-quantity";
 export { validatePrice } from "./validate-price";
 export { validateBalance } from "./validate-balance";

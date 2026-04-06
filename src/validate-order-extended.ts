@@ -1,7 +1,7 @@
 
 import isPlainObject from "lodash/isPlainObject";
 import compact from "lodash/compact";
-import isNil from "lodash/isNil";
+import isEmpty from "lodash/isEmpty";
 
 import {
   CreateOrderDto,
@@ -15,6 +15,7 @@ import {
 
 import {
   validateInputStructure,
+  validateCustomer,
   validateQuantity,
   validatePrice,
   validateBalance,
@@ -48,25 +49,35 @@ export function validateOrder(
 
   const [parsedOrder, structureErrors] = validateInputStructure(orderData);
 
-  if (isNil(parsedOrder)) {
+  if (isEmpty(parsedOrder)) {
     return { valid: false, errors: structureErrors };
+  }
+
+  // const quantityError = validateQuantity(parsedOrder);
+  // const priceError = validatePrice(parsedOrder);
+
+  const customer = findCustomerById(parsedOrder.customer_id);
+  // let balanceError: ValidationError | null = null;
+
+  const customerError = validateCustomer(parsedOrder, customer);
+
+  if (!isEmpty(customerError)) {
+    return { valid: false, errors: [customerError] };
   }
 
   const quantityError = validateQuantity(parsedOrder);
   const priceError = validatePrice(parsedOrder);
+  const balanceError = validateBalance(parsedOrder, customer!);
 
-  const customer = findCustomerById(parsedOrder.customer_id);
-  let balanceError: ValidationError | null = null;
-
-  if (!customer) {
-    balanceError = {
-      field: "customer_id",
-      code: ValidationErrorCode.INVALID_TYPE,
-      message: `Customer not found: ${parsedOrder.customer_id}`,
-    };
-  } else {
-    balanceError = validateBalance(parsedOrder, customer);
-  }
+  // if (!customer) {
+  //   balanceError = {
+  //     field: "customer_id",
+  //     code: ValidationErrorCode.INVALID_TYPE,
+  //     message: `Customer not found: ${parsedOrder.customer_id}`,
+  //   };
+  // } else {
+  //   balanceError = validateBalance(parsedOrder, customer);
+  // }
 
   const marketPrice: MarketPriceSnapshot = getCurrentMarketPrice();
   let priceVerificationError: ValidationError | null = null;
