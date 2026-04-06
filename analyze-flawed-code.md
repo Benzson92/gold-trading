@@ -76,7 +76,7 @@ For a **buy order**, it checks if the customer can afford it (like checking thei
 
 ### Reliability
 
-- No Transaction Safety → Use atomic DB transactions (`with db_connection:`)
+- No Transaction Safety → Use atomic DB transactions (`with conn:`)
 - Race Condition → Use row-level locking (`SELECT ... FOR UPDATE`)
 - No Connection Cleanup → Use context manager / `finally`
 
@@ -116,7 +116,7 @@ For a **buy order**, it checks if the customer can afford it (like checking thei
 
 | # | Problem | Severity | Priority | Core Risk | Fix |
 | --- | --- | --- | --- | --- | --- |
-| 2 | No Transaction Safety | 🔴 Critical | P0 | Inconsistent data / money mismatch | Use `with db_connection:` (atomic) |
+| 2 | No Transaction Safety | 🔴 Critical | P0 | Inconsistent data / money mismatch | Use `with conn:` (atomic) |
 | 15 | Race Condition (TOCTOU) | 🔴 Critical | P1 | Double-spend / customer gets free gold | `SELECT ... FOR UPDATE` row locking |
 | 5 | No Connection Cleanup | 🟠 High | P1 | Resource leaks / system instability | Use context manager / `finally: close()` |
 
@@ -147,5 +147,103 @@ For a **buy order**, it checks if the customer can afford it (like checking thei
 | P3 | 9, 10, 11, 12 | Scheduled refactor |
 
 
+## Detailed Problem Analysis & Final Fixes
+
+### 🔴 Problem 1 — SQL Injection (Security | P0)
+
+```
+# DANGEROUS: Raw string concatenation
+"SELECT balance, name FROM customers WHERE id = " + str(customer_id)
+
+# DANGEROUS: f-string interpolation
+f"INSERT INTO orders ... VALUES ({customer_id}, '{order_type}', ...)"
+```
+
+**Why It Matters:** Database query is built by concatenating raw user input directly into SQL strings. In a gold trading system, this means any external caller could inject malicious SQL to steal customer data, modify balances, delete transaction records, or drop entire tables. A single attack could compromise every customer account and expose the company to catastrophic legal and financial liability.
+
+**Fix:** Replace all string concatenation with parameterized queries using `?` placeholders, so the database engine treats user input strictly as data, never as executable commands.
+
+```
+# SAFE: Parameterized query — the database treats inputs as DATA, never as commands
+cursor = conn.execute(
+    "SELECT balance, name FROM customers WHERE id = ?",
+    (customer_id,)
+)
+```
 
 
+### 🔴 Problem 2 — No Transaction Safety (Reliability | P0)
+
+```
+conn.execute(
+f"UPDATE customers SET balance = {new_balance} WHERE id = {customer_id}"
+)
+conn.execute(
+f"INSERT INTO orders (customer_id, type, quantity, price, total) VALUES ({customer_id}, '{order_type}', {quantity}, {price}, {total_cost})"
+)
+conn.commit()
+```
+
+**Why It Matters:** The function performs two separate database writes (update balance, then insert order record) without wrapping them in an atomic transaction. If the system crashes between these two operations, the customer's money disappears but no order is recorded — or an order exists but the balance was never deducted. In financial systems, this kind of partial update destroys auditability and creates irreconcilable discrepancies between accounts and transaction logs.
+
+**Fix:** Wrap both operations inside a `with conn:` context manager, which guarantees that either both writes succeed together or both are rolled back entirely.
+
+```
+# SAFE: Atomic transaction — either BOTH writes succeed, or NEITHER does
+try:
+    with conn:  # SQLite context manager auto-commits on success, auto-rolls-back on failure
+        conn.execute(
+            "UPDATE customers SET balance = ? WHERE id = ?",
+            (new_balance, customer_id)
+        )
+        conn.execute(
+            "INSERT INTO orders (...) VALUES (?, ?, ?, ?, ?)",
+            (customer_id, order_type, quantity, price, total_cost)
+        )
+except sqlite3.Error as e:
+    logging.error(f"Transaction failed for customer {customer_id}: {e}")
+    return {"status": "failed", "reason": "transaction_error"}
+```
+
+### 🔴 Problem 6 — No Sell Validation (Correctness | P0)
+
+```
+elif order_type == "sell":
+    total_revenue = quantity * price
+    new_balance = balance + total_revenue
+```
+
+**Why It Matters:** The sell path has zero validation — it blindly adds revenue to the customer's balance without verifying that the customer actually owns the gold they claim to be selling. This means any customer can sell unlimited phantom gold they never purchased, effectively generating infinite money. In a real trading platform, this is an open door to fraud that would be exploited within hours of deployment.
+
+**Fix:** Query the customer's gold holdings before executing any sell order and reject the transaction if holdings are insufficient.
+
+```
+if order_type == "sell":
+    gold_holdings = _get_customer_gold_holdings(conn, customer_id)
+    if gold_holdings < quantity:
+        return {"status": "failed", "reason": "insufficient_gold_holdings"}
+```
+
+### 🔴 Problem 13 — No Price Range Validation (Correctness | P1)
+
+```
+total_cost = quantity * price
+```
+
+**Why It Matters:** The function accepts whatever price the caller passes and uses it directly without comparing it to the current market price. Gold prices fluctuate throughout the day, and the gap between a quoted price and the actual market price can represent significant money. A stale price, a manipulated price, or even a simple frontend bug could cause the company to sell gold far below market value or buy it far above — eroding the company's spread on every mispriced transaction.
+
+**Fix:** Validate the quoted price against a live market price feed and reject orders that deviate beyond an acceptable tolerance.
+
+### 🔴 Problem 15 — Race Condition / TOCTOU (Reliability | P1)
+
+```
+cursor = conn.execute(
+"SELECT balance, name FROM customers WHERE id = " + str(customer_id)
+)
+customer = cursor.fetchone()
+balance = customer[0]
+```
+
+**Why It Matters:** When two concurrent requests arrive for the same customer, both read the same balance before either writes. Both pass the balance check, both deduct from the same starting balance, and the customer effectively spends the same money twice — receiving double the gold while only being charged once. Under real trading volume with concurrent API calls, this is not theoretical; it is a guaranteed source of financial loss.
+
+**Fix:** Use database-level row locking to ensure that once a transaction reads a customer's balance, no other transaction can read or modify that row until the first transaction completes.
