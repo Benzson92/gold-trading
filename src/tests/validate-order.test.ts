@@ -51,7 +51,9 @@ beforeEach(() => {
       C001: { id: "C001", name: "Somchai Goldhand", balance: 1_000_000 },
       C002: { id: "C002", name: "Napat Thinwallet", balance: 10_000 },
       C003: { id: "C003", name: "Ploy Goldholder", balance: 50 },
+      "12345": { id: "12345", name: "Numeric Niran", balance: 500_000 },
     };
+
     return customers[id];
   });
 });
@@ -562,6 +564,8 @@ describe("Security & Edge Cases", () => {
   test("accepts numeric customer_id at structure validation", () => {
     const order = { ...validBuyOrder(), customer_id: 12345 };
     const result = validateOrder(order);
+
+    console.log('errors', result)
   
     expect(result.valid).toBe(true);
     if (result.valid) {
