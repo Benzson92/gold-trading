@@ -1,25 +1,5 @@
-// ============================================================================
-// validate-input-structure.ts — Station 1: The Front Desk Check-In
-// ============================================================================
-// Chef Analogy: Before anyone enters the kitchen, the front desk verifies
-// the reservation form is complete. Missing name? Rejected. Phone number
-// looks like "DROP TABLE"? Rejected. Everything present and clean? You
-// get a validated ticket and proceed to the kitchen stations.
-//
-// This is the ONLY validator that returns a tuple:
-//   [ValidatedOrder | null, ValidationError[]]
-// Because structural problems can affect MULTIPLE fields, we collect
-// ALL structural errors at once instead of failing on the first one.
-//
-// SECURITY: The customer_id is validated against a regex pattern to
-// prevent injection attacks. Customer IDs flow into database queries
-// and API calls — a malicious ID could be devastating.
-// ============================================================================
+import { isNil, isString, isNumber, isFinite } from "lodash";
 
-// --- External Libraries ---
-import isNil from "lodash/isNil";
-
-// --- Internal Modules: Types ---
 import {
   CreateOrderDto,
   ValidatedOrder,
@@ -28,26 +8,24 @@ import {
   ValidationErrorCode,
 } from "../types";
 
-// --- Internal Modules: Constants ---
 import { CUSTOMER_ID_PATTERN } from "../constants";
 
-// ---------------------------------------------------------------------------
-// validateInputStructure — Check every field on the order form
-// ---------------------------------------------------------------------------
-
 export function validateInputStructure(
-  dto: CreateOrderDto,
+  orderData: CreateOrderDto,
 ): [ValidatedOrder | null, ValidationError[]] {
   const errors: ValidationError[] = [];
+  const { customer_id, order_type, quantity, quoted_price } = orderData || {};
 
-  // --- Check customer_id ---
-  if (isNil(dto.customer_id) || typeof dto.customer_id !== "string") {
+  // --- Check customer_id (accepts string or number) ---
+  const normalizedCustomerId = isNumber(customer_id) ? String(customer_id) : customer_id;
+
+  if (isNil(customer_id) || (!isString(customer_id) && !isNumber(customer_id))) {
     errors.push({
       field: "customer_id",
       code: ValidationErrorCode.MISSING_FIELD,
-      message: "customer_id is required and must be a string",
+      message: "customer_id is required and must be a string or number",
     });
-  } else if (!CUSTOMER_ID_PATTERN.test(dto.customer_id)) {
+  } else if (!CUSTOMER_ID_PATTERN.test(normalizedCustomerId)) {
     errors.push({
       field: "customer_id",
       code: ValidationErrorCode.INVALID_CUSTOMER_ID_FORMAT,
@@ -59,13 +37,13 @@ export function validateInputStructure(
   // --- Check order_type ---
   const validOrderTypes = Object.values(OrderType);
 
-  if (isNil(dto.order_type)) {
+  if (isNil(order_type)) {
     errors.push({
       field: "order_type",
       code: ValidationErrorCode.MISSING_FIELD,
       message: "order_type is required",
     });
-  } else if (!validOrderTypes.includes(dto.order_type)) {
+  } else if (!validOrderTypes.includes(order_type)) {
     errors.push({
       field: "order_type",
       code: ValidationErrorCode.INVALID_TYPE,
@@ -74,13 +52,13 @@ export function validateInputStructure(
   }
 
   // --- Check quantity ---
-  if (isNil(dto.quantity)) {
+  if (isNil(quantity)) {
     errors.push({
       field: "quantity",
       code: ValidationErrorCode.MISSING_FIELD,
       message: "quantity is required",
     });
-  } else if (typeof dto.quantity !== "number" || !isFinite(dto.quantity)) {
+  } else if (!isNumber(quantity) || !isFinite(quantity)) {
     errors.push({
       field: "quantity",
       code: ValidationErrorCode.INVALID_TYPE,
@@ -89,13 +67,13 @@ export function validateInputStructure(
   }
 
   // --- Check quoted_price ---
-  if (isNil(dto.quoted_price)) {
+  if (isNil(quoted_price)) {
     errors.push({
       field: "quoted_price",
       code: ValidationErrorCode.MISSING_FIELD,
       message: "quoted_price is required",
     });
-  } else if (typeof dto.quoted_price !== "number" || !isFinite(dto.quoted_price)) {
+  } else if (!isNumber(quoted_price) || !isFinite(quoted_price)) {
     errors.push({
       field: "quoted_price",
       code: ValidationErrorCode.INVALID_TYPE,
@@ -103,16 +81,15 @@ export function validateInputStructure(
     });
   }
 
-  // --- Verdict ---
   if (errors.length > 0) {
     return [null, errors];
   }
 
   const validatedOrder: ValidatedOrder = {
-    customer_id: dto.customer_id,
-    order_type: dto.order_type,
-    quantity: dto.quantity,
-    quoted_price: dto.quoted_price,
+    customer_id: String(customer_id),
+    order_type: order_type!,
+    quantity: quantity!,
+    quoted_price: quoted_price!,
   };
 
   return [validatedOrder, []];

@@ -559,21 +559,16 @@ describe("Security & Edge Cases", () => {
     expect(result.valid).toBe(false);
   });
 
-  test("rejects numeric customer_id at structure validation", () => {
+  test("accepts numeric customer_id at structure validation", () => {
     const order = { ...validBuyOrder(), customer_id: 12345 };
     const result = validateOrder(order);
-
-    expect(result.valid).toBe(false);
-    if (!result.valid) {
-      expect(result.errors).toContainEqual(
-        expect.objectContaining({
-          field: "customer_id",
-          code: ValidationErrorCode.MISSING_FIELD,
-        }),
-      );
+  
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.order.customer_id).toBe("12345");
     }
   });
-
+  
   test("rejects customer_id with injection characters via regex", () => {
     const order = {
       ...validBuyOrder(),
