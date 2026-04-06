@@ -43,18 +43,11 @@ export function validateOrder(
 
   const [parsedOrder, structureErrors] = validateInputStructure(orderData);
 
-  // console.log('parsedOrder',parsedOrder)
-
   if (isEmpty(parsedOrder)) {
     return { valid: false, errors: structureErrors };
   }
 
-  // const quantityError = validateQuantity(parsedOrder);
-  // const priceError = validatePrice(parsedOrder);
-
   const customer = findCustomerById(parsedOrder.customer_id);
-  // let balanceError: ValidationError | null = null;
-
   const customerError = validateCustomer(parsedOrder, customer);
 
   if (!isEmpty(customerError)) {
@@ -65,23 +58,7 @@ export function validateOrder(
   const priceError = validatePrice(parsedOrder);
   const balanceError = validateBalance(parsedOrder, customer!);
 
-  // const balanceError = isEmpty(customerError) ? validateBalance(parsedOrder, customer!) : null;
-
-  // if (!customer) {
-  //   console.log('customer',customer)
-  //   console.log('parsedOrder',parsedOrder, typeof parsedOrder.customer_id)
-
-  //   balanceError = {
-  //     field: "customer_id",
-  //     code: ValidationErrorCode.INVALID_TYPE,
-  //     message: `Customer not found: ${parsedOrder.customer_id}`,
-  //   };
-  // } else {
-  //   balanceError = validateBalance(parsedOrder, customer);
-  // }
-
   const marketPrice: MarketPriceSnapshot = getCurrentMarketPrice();
-  // let priceVerificationError: ValidationError | null = null;
   const priceVerificationError = validatePriceFreshness(parsedOrder, marketPrice);
  
   const allErrors: ValidationError[] = compact([

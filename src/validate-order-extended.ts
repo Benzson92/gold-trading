@@ -53,12 +53,7 @@ export function validateOrder(
     return { valid: false, errors: structureErrors };
   }
 
-  // const quantityError = validateQuantity(parsedOrder);
-  // const priceError = validatePrice(parsedOrder);
-
   const customer = findCustomerById(parsedOrder.customer_id);
-  // let balanceError: ValidationError | null = null;
-
   const customerError = validateCustomer(parsedOrder, customer);
 
   if (!isEmpty(customerError)) {
@@ -68,16 +63,6 @@ export function validateOrder(
   const quantityError = validateQuantity(parsedOrder);
   const priceError = validatePrice(parsedOrder);
   const balanceError = validateBalance(parsedOrder, customer!);
-
-  // if (!customer) {
-  //   balanceError = {
-  //     field: "customer_id",
-  //     code: ValidationErrorCode.INVALID_TYPE,
-  //     message: `Customer not found: ${parsedOrder.customer_id}`,
-  //   };
-  // } else {
-  //   balanceError = validateBalance(parsedOrder, customer);
-  // }
 
   const marketPrice: MarketPriceSnapshot = getCurrentMarketPrice();
   let priceVerificationError: ValidationError | null = null;
