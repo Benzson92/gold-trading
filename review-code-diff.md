@@ -68,7 +68,7 @@ Imagine your recipe says "add 0.1 grams of saffron ten times." You'd expect to h
 Over thousands of gold transactions in THB, these tiny rounding errors accumulate into real money that either vanishes or appears from nowhere. The fix is to use `Decimal` throughout:
 
 ```python
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal 
 
 # Store balances as Decimal
 customer_balances = {
