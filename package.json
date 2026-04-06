@@ -1,7 +1,6 @@
 {
   "name": "gold-order-validator",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -14,9 +13,7 @@
     "build": "tsc",
     "lint": "tsc --noEmit"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.24",
