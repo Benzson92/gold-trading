@@ -1,24 +1,8 @@
-// ============================================================================
-// validate-quantity.ts — Station 2: The Portion Size Inspector
-// ============================================================================
-// Chef Analogy: The portion inspector checks every dish leaving the line:
-//   "Is this at least half a plate?" (minimum 0.5 baht-weight)
-//   "Is this more than 100 plates?" (maximum 100 baht-weight)
-//   "Is this a clean half-plate increment?" (multiples of 0.5)
-// ============================================================================
 
-// --- External Libraries ---
 import BigNumber from "bignumber.js";
 
-// --- Internal Modules: Types ---
 import { ValidatedOrder, ValidationError, ValidationErrorCode } from "../types";
-
-// --- Internal Modules: Constants ---
 import { MIN_QUANTITY, MAX_QUANTITY, QUANTITY_INCREMENT } from "../constants";
-
-// ---------------------------------------------------------------------------
-// validateQuantity — Check range and increment
-// ---------------------------------------------------------------------------
 
 export function validateQuantity(
   order: ValidatedOrder,

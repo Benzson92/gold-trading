@@ -1,46 +1,17 @@
-// ============================================================================
-// validate-spread.ts — Station 6: The Pricing Station (NEW in Part 3)
-// ============================================================================
-// Chef Analogy: The HEAD CHEF sets menu prices using a formula:
-//   ingredient cost + markup = menu price
-//
-// This station calculates the markup (spread) and verifies that the
-// price on the customer's order matches the menu (within tolerance).
-//
-// FLOW:
-//   1. Take the base market price (ingredient cost)
-//   2. Add the spread margin (restaurant's markup %)
-//   3. Calculate the expected buy price (menu price)
-//   4. Compare customer's quoted price against expected
-//   5. Within tolerance → approved
-//   6. Exceeds tolerance → rejected with details
-//
-// WHY BigNumber?
-//   Financial math demands exact decimal arithmetic.
-//   0.1 + 0.2 = 0.30000000000000004 in JavaScript.
-//   In gold trading, that tiny error could mean a valid order rejected
-//   or an invalid order approved. BigNumber eliminates this entirely.
-// ============================================================================
 
-// --- External Libraries ---
 import BigNumber from "bignumber.js";
 
-// --- Internal Modules: Types ---
 import {
   SpreadDetail,
   ValidationError,
   ValidationErrorCode,
 } from "../types";
 
-// --- Internal Modules: Constants ---
 import {
   SPREAD_MARGIN_PERCENT,
   SPREAD_TOLERANCE_PERCENT,
 } from "../constants";
 
-// ---------------------------------------------------------------------------
-// calculateSpread — Compute the full spread breakdown
-// ---------------------------------------------------------------------------
 // INPUT:
 //   - marketSellPrice: The base market price (ingredient cost)
 //   - quotedPrice: What the customer is willing to pay
@@ -90,19 +61,6 @@ export function calculateSpread(
     deviationPercent: bnDeviation.decimalPlaces(4).toNumber(),
   };
 }
-
-// ---------------------------------------------------------------------------
-// validateSpread — Check if the quoted buy price is within tolerance
-// ---------------------------------------------------------------------------
-// Chef Analogy: The floor manager checks whether the price on the
-// customer's order matches the current menu. Small rounding differences
-// are fine (within 2%), but ฿50 for a ฿500 lobster gets flagged.
-//
-// WHY THIS REPLACES PRICE FRESHNESS FOR BUY ORDERS:
-//   The spread check is STRICTLY stronger. If the quoted price includes
-//   the correct markup over the CURRENT market price, it implicitly
-//   proves the price is fresh enough. Running both would be redundant.
-// ---------------------------------------------------------------------------
 
 export function validateSpread(
   marketSellPrice: number,

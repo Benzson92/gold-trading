@@ -1,19 +1,7 @@
-// ============================================================================
-// validate-price.ts — Station 3: The Price Tag Inspector
-// ============================================================================
-// Chef Analogy: The cashier verifies the price on the ticket is positive
-// and not some absurd number. A dish can't cost -฿50 or ฿0.
-// ============================================================================
 
-// --- External Libraries ---
 import BigNumber from "bignumber.js";
 
-// --- Internal Modules: Types ---
 import { ValidatedOrder, ValidationError, ValidationErrorCode } from "../types";
-
-// ---------------------------------------------------------------------------
-// validatePrice — Ensure price is positive
-// ---------------------------------------------------------------------------
 
 export function validatePrice(
   order: ValidatedOrder,
