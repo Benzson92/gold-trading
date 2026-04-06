@@ -17,12 +17,6 @@
 // --- Internal Modules ---
 import { OrderType } from "./types";
 import { validateOrder } from "./validate-order";
-// import { DailyLimitTracker } from "./daily-limit-tracker";
-// import {
-//   SPREAD_MARGIN_PERCENT,
-//   SPREAD_TOLERANCE_PERCENT,
-//   MAX_DAILY_QUANTITY_PER_CUSTOMER,
-// } from "./constants";
 
 // ---------------------------------------------------------------------------
 // UTILITIES — Pretty printing helpers
@@ -59,270 +53,174 @@ function printScenario(
 }
 
 // ---------------------------------------------------------------------------
-// SCENARIO GROUP A: Spread Calculation
+// SCENARIO GROUP A: Happy Path — Valid Orders
 // ---------------------------------------------------------------------------
-// Tests the new spread validation for BUY orders.
-//
-// KEY FORMULA:
-//   sell_price (base market) = 30,000
-//   spread margin = 0.5%
-//   expected buy price = 30,000 × 1.005 = 30,150
-//   tolerance = 2% → acceptable range: 29,547 to 30,753
+// Chef Analogy: These are the regulars who order off the menu correctly.
+// The kitchen should fire these tickets without a hitch.
 // ---------------------------------------------------------------------------
 
-// function runSpreadScenarios(tracker: DailyLimitTracker): void {
-//   printHeader(
-//     `REQUIREMENT A: Spread Calculation` +
-//     `\n  Spread margin: ${SPREAD_MARGIN_PERCENT}% | ` +
-//     `Tolerance: ${SPREAD_TOLERANCE_PERCENT}%` +
-//     `\n  Market sell price: 30,000 THB | ` +
-//     `Expected buy price: 30,150 THB`,
-//   );
+function runHappyPathScenarios(): void {
+  printHeader("GROUP A: HAPPY PATH — Valid Orders");
 
-//   // Scenario A1: BUY order with EXACT expected buy price
-//   // Expected: VALID — price matches perfectly
-//   const exactPriceOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 1,
-//     quoted_price: 30_150,
-//   };
+  // Scenario A1: Perfect Buy Order (should PASS)
+  // "A regular customer orders 1.5 baht-weight at the current buy price."
+  const buyOrder = {
+    customer_id: "C001",
+    order_type: OrderType.BUY,
+    quantity: 1.5,
+    quoted_price: 30_400,
+  };
 
-//   printScenario(
-//     "A1: Exact buy price (30,150 = 30,000 × 1.005)",
-//     exactPriceOrder,
-//     validateOrder(exactPriceOrder),
-//   );
+  printScenario("A1: Valid Buy Order (1.5 baht-weight @ 30,400)", buyOrder, validateOrder(buyOrder));
 
-//   // Scenario A2: BUY order within 2% tolerance (slightly above)
-//   // 30,300 is 0.50% above expected — well within 2%
-//   // Expected: VALID
-//   const withinToleranceOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 1,
-//     quoted_price: 30_300,
-//   };
+  // Scenario A2: Perfect Sell Order (should PASS)
+  // "A customer sells 2.0 baht-weight at the current sell price."
+  const sellOrder = {
+    customer_id: "C001",
+    order_type: OrderType.SELL,
+    quantity: 2.0,
+    quoted_price: 30_300,
+  };
 
-//   printScenario(
-//     "A2: Within tolerance (30,300 — 0.50% deviation)",
-//     withinToleranceOrder,
-//     validateOrder(withinToleranceOrder),
-//   );
-
-//   // Scenario A3: BUY order EXCEEDING 2% tolerance
-//   // 35,000 is ~16% above expected — way too high
-//   // Expected: INVALID — SPREAD_DEVIATION_TOO_HIGH
-//   const overToleranceOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 1,
-//     quoted_price: 35_000,
-//   };
-
-//   printScenario(
-//     "A3: Over tolerance (35,000 — ~16% deviation)",
-//     overToleranceOrder,
-//     validateOrder(overToleranceOrder),
-//   );
-
-//   // Scenario A4: BUY order below expected (under-quoting)
-//   // 25,000 is ~17% below expected — also invalid
-//   // Expected: INVALID — SPREAD_DEVIATION_TOO_HIGH
-//   const underQuoteOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 1,
-//     quoted_price: 25_000,
-//   };
-
-//   printScenario(
-//     "A4: Under-quoted (25,000 — ~17% deviation)",
-//     underQuoteOrder,
-//     validateOrder(underQuoteOrder),
-//   );
-
-//   // Scenario A5: SELL order uses freshness check, NOT spread
-//   // Expected: VALID — sell orders bypass spread validation
-//   const sellOrder = {
-//     customer_id: "C003",
-//     order_type: OrderType.SELL,
-//     quantity: 1,
-//     quoted_price: 30_000,
-//   };
-
-//   printScenario(
-//     "A5: SELL order (uses price freshness, not spread)",
-//     sellOrder,
-//     validateOrder(sellOrder),
-//   );
-// }
+  printScenario("A2: Valid Sell Order (2.0 baht-weight @ 30,300)", sellOrder, validateOrder(sellOrder));
+}
 
 // ---------------------------------------------------------------------------
-// SCENARIO GROUP B: Daily Trading Limits
+// SCENARIO GROUP B: Business Rule Violations
 // ---------------------------------------------------------------------------
-// Tests the daily limit enforcement.
-//
-// KEY RULE:
-//   Each customer can trade max 5 baht-weight per day (across ALL orders).
-//   If a new order would exceed this limit, it's rejected with a clear
-//   message showing the remaining allowance.
+// Chef Analogy: These customers ask for things the kitchen can't serve —
+// an item that's 86'd (out of stock), a wrong portion size, or a price
+// from last week's menu. The expeditor catches these before they reach
+// the line cooks.
 // ---------------------------------------------------------------------------
 
-// function runDailyLimitScenarios(): void {
-//   printHeader(
-//     `REQUIREMENT B: Daily Trading Limits` +
-//     `\n  Max daily quantity per customer: ` +
-//     `${MAX_DAILY_QUANTITY_PER_CUSTOMER} baht-weight`,
-//   );
+function runBusinessRuleScenarios(): void {
+  printHeader("GROUP B: BUSINESS RULE VIOLATIONS");
 
-//   // Fresh tracker for this scenario group — isolated from Spread tests
-//   const tracker = new DailyLimitTracker();
+  // Scenario B1: Insufficient Balance (should FAIL)
+  // "A customer with 10,000 THB tries to buy 1 baht-weight at 30,400 THB."
+  // That's 30,400 THB needed but only 10,000 available — denied!
+  const insufficientBalance = {
+    customer_id: "C003",
+    order_type: OrderType.BUY,
+    quantity: 1.0,
+    quoted_price: 30_400,
+  };
 
-//   // Scenario B1: First order of the day (2 baht-weight)
-//   // Expected: VALID — 2 out of 5 limit, plenty of room
-//   const firstOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 2,
-//     quoted_price: 30_150,
-//   };
+  printScenario(
+    "B1: Insufficient Balance (needs 30,400, has 10,000)",
+    insufficientBalance,
+    validateOrder(insufficientBalance),
+  );
 
-//   const firstResult = validateOrder(firstOrder);
-//   printScenario("B1: First order today (2 of 5 limit)", firstOrder, firstResult);
+  // Scenario B2: Invalid Quantity Increment (should FAIL)
+  // "0.3 baht-weight is not a valid trading unit (must be multiples of 0.5)."
+  const invalidQuantity = {
+    customer_id: "C001",
+    order_type: OrderType.BUY,
+    quantity: 0.3,
+    quoted_price: 30_400,
+  };
 
-//   // Record the order if valid (simulates post-execution recording)
-//   if (firstResult.valid) {
-//     tracker.recordOrder("C001", 2);
-//     console.log(`  📋 Recorded: C001 now at ${tracker.getTodayTotal("C001")} baht-weight today`);
-//   }
+  printScenario(
+    "B2: Invalid Quantity (0.3 — not a multiple of 0.5)",
+    invalidQuantity,
+    validateOrder(invalidQuantity),
+  );
 
-//   // Scenario B2: Second order (2.5 baht-weight, total becomes 4.5)
-//   // Expected: VALID — 4.5 out of 5 limit, just under
-//   const secondOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 2.5,
-//     quoted_price: 30_150,
-//   };
+  // Scenario B3: Stale Price (should FAIL)
+  // "The customer quoted 25,000 THB but market price is 30,400 THB."
+  // That's ~17.8% deviation — way beyond the 2% threshold.
+  const stalePrice = {
+    customer_id: "C001",
+    order_type: OrderType.BUY,
+    quantity: 1.0,
+    quoted_price: 25_000,
+  };
 
-//   const secondResult = validateOrder(secondOrder);
-//   printScenario("B2: Second order (2.5 more, total=4.5)", secondOrder, secondResult);
+  printScenario(
+    "B3: Stale Quoted Price (25,000 vs market 30,400 — ~17.8% off)",
+    stalePrice,
+    validateOrder(stalePrice),
+  );
 
-//   if (secondResult.valid) {
-//     tracker.recordOrder("C001", 2.5);
-//     console.log(`  📋 Recorded: C001 now at ${tracker.getTodayTotal("C001")} baht-weight today`);
-//   }
+  // Scenario B4: Zero Balance Customer Tries to Buy (should FAIL)
+  const zeroBalance = {
+    customer_id: "C004",
+    order_type: OrderType.BUY,
+    quantity: 0.5,
+    quoted_price: 30_400,
+  };
 
-//   // Scenario B3: Third order that EXCEEDS the limit (1 more → total 5.5)
-//   // Expected: INVALID — Daily limit exceeded, remaining: 0.5
-//   const thirdOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 1,
-//     quoted_price: 30_150,
-//   };
+  printScenario(
+    "B4: Zero Balance Buy Attempt (C004 has 0 THB)",
+    zeroBalance,
+    validateOrder(zeroBalance),
+  );
 
-//   printScenario("B3: Third order (1 more, would exceed 5.0 limit)", thirdOrder, validateOrder(thirdOrder));
-//   console.log(`  📋 Remaining allowance: ${tracker.getRemainingAllowance("C001")} baht-weight`);
+  // Scenario B5: Negative Values (should FAIL)
+  // "Negative quantity and negative price — both invalid."
+  const negativeValues = {
+    customer_id: "C001",
+    order_type: OrderType.BUY,
+    quantity: -2.0,
+    quoted_price: -30_400,
+  };
 
-//   // Scenario B4: Order exactly at the remaining limit (0.5)
-//   // Expected: VALID — exactly hits the cap
-//   const exactLimitOrder = {
-//     customer_id: "C001",
-//     order_type: OrderType.BUY,
-//     quantity: 0.5,
-//     quoted_price: 30_150,
-//   };
-
-//   const exactResult = validateOrder(exactLimitOrder);
-//   printScenario("B4: Order at exact remaining allowance (0.5)", exactLimitOrder, exactResult);
-
-//   if (exactResult.valid) {
-//     tracker.recordOrder("C001", 0.5);
-//     console.log(`  📋 Recorded: C001 now at ${tracker.getTodayTotal("C001")} baht-weight today (fully used)`);
-//   }
-
-//   // Scenario B5: Different customer is unaffected by C001's limit
-//   // Expected: VALID — C003 has their own separate daily limit
-//   const differentCustomerOrder = {
-//     customer_id: "C003",
-//     order_type: OrderType.SELL,
-//     quantity: 2,
-//     quoted_price: 30_000,
-//   };
-
-//   printScenario(
-//     "B5: Different customer (C003 — not affected by C001's limit)",
-//     differentCustomerOrder,
-//     validateOrder(differentCustomerOrder),
-//   );
-// }
+  printScenario(
+    "B5: Negative Values (qty: -2.0, price: -30,400)",
+    negativeValues,
+    validateOrder(negativeValues),
+  );
+}
 
 // ---------------------------------------------------------------------------
-// SCENARIO GROUP C: Edge Cases & Combined Scenarios
+// SCENARIO GROUP C: Edge Cases & Bad Input
+// ---------------------------------------------------------------------------
+// Chef Analogy: These aren't even real food orders — someone handed the
+// expeditor a napkin with doodles on it, or yelled a request in a language
+// nobody speaks. The kitchen must handle these gracefully without crashing
+// (no fires, no broken plates).
 // ---------------------------------------------------------------------------
 
 function runEdgeCaseScenarios(): void {
-  printHeader("EDGE CASES & COMBINED SCENARIOS");
-  // const tracker = new DailyLimitTracker();
+  printHeader("GROUP C: EDGE CASES & BAD INPUT");
 
-  // Scenario C1: Multiple errors at once
-  // Invalid quantity + spread deviation + insufficient balance
-  const multiErrorOrder = {
-    customer_id: "C002",
+  // Scenario C1: Missing Fields (should FAIL)
+  // "Someone sent an incomplete order — no quantity, no price."
+  const missingFields = {
+    customer_id: "C001",
     order_type: OrderType.BUY,
-    quantity: 0.3,
-    quoted_price: 50_000,
   };
 
   printScenario(
-    "C1: Multiple errors (bad quantity + wrong price + low balance customer)",
-    multiErrorOrder,
-    validateOrder(multiErrorOrder),
+    "C1: Missing Fields (no quantity, no price)",
+    missingFields,
+    validateOrder(missingFields),
   );
 
-  // Scenario C2: Completely invalid input (not even an object)
+  // Scenario C2: Completely Invalid Input (should FAIL gracefully)
+  // "Someone sent a string instead of an order object."
+  // Our validator should NEVER crash — it handles any input type.
   printScenario(
-    "C2: Not an object (string input)",
-    "not an order",
-    validateOrder("not an order"),
+    "C2: Non-Object Input (string instead of order)",
+    "this is not an order",
+    validateOrder("this is not an order"),
   );
 
-  // Scenario C3: Missing fields
-  const incompleteOrder = { customer_id: "C001" };
-  printScenario(
-    "C3: Missing fields (only customer_id)",
-    incompleteOrder,
-    validateOrder(incompleteOrder),
-  );
-
-  // Scenario C4: Injection attempt in customer_id
-  const injectionOrder = {
-    customer_id: "'; DROP TABLE orders;--",
+  // Scenario C3: Injection Attempt (should FAIL safely)
+  // "Someone tries SQL injection through the customer_id field."
+  const injectionAttempt = {
+    customer_id: "'; DROP TABLE customers;--",
     order_type: OrderType.BUY,
-    quantity: 1,
-    quoted_price: 30_150,
+    quantity: 1.0,
+    quoted_price: 30_400,
   };
 
   printScenario(
-    "C4: SQL injection attempt in customer_id",
-    injectionOrder,
-    validateOrder(injectionOrder),
-  );
-
-  // Scenario C5: Non-existent customer
-  const unknownCustomerOrder = {
-    customer_id: "C999",
-    order_type: OrderType.BUY,
-    quantity: 1,
-    quoted_price: 30_150,
-  };
-
-  printScenario(
-    "C5: Non-existent customer (C999)",
-    unknownCustomerOrder,
-    validateOrder(unknownCustomerOrder),
+    "C3: SQL Injection Attempt in customer_id",
+    injectionAttempt,
+    validateOrder(injectionAttempt),
   );
 }
 
@@ -332,15 +230,12 @@ function runEdgeCaseScenarios(): void {
 
 function main(): void {
   console.log("╔════════════════════════════════════════════════════════════╗");
-  console.log("║  GOLD TRADING ORDER VALIDATION — Part 3 Demo             ║");
-  console.log("║  Spread Calculation + Daily Trading Limits               ║");
+  console.log("║  GOLD TRADING ORDER VALIDATION — Soft Launch Demo        ║");
+  console.log("║  10 Scenarios across 3 Groups                           ║");
   console.log("╚════════════════════════════════════════════════════════════╝");
 
-  // Shared tracker for spread scenarios (to show limit accumulation)
-  // const spreadTracker = new DailyLimitTracker();
-
-  // runSpreadScenarios(spreadTracker);
-  // runDailyLimitScenarios();
+  runHappyPathScenarios();
+  runBusinessRuleScenarios();
   runEdgeCaseScenarios();
 
   console.log("\n" + "=".repeat(70));
