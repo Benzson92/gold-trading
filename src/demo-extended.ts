@@ -1,10 +1,4 @@
-// ============================================================================
-// demo.ts — The Soft Launch Night
-// ============================================================================
-// HOW TO RUN:  npx tsx demo.ts
-// ============================================================================
 
-// --- Internal Modules ---
 import { OrderType } from "./types";
 import { validateOrder } from "./validate-order-extended";
 import { DailyLimitTracker } from "./models";
@@ -13,10 +7,6 @@ import {
   SPREAD_TOLERANCE_PERCENT,
   MAX_DAILY_QUANTITY_PER_CUSTOMER,
 } from "./constants";
-
-// ---------------------------------------------------------------------------
-// UTILITIES
-// ---------------------------------------------------------------------------
 
 function printHeader(title: string): void {
   console.log("\n" + "=".repeat(70));
@@ -48,10 +38,7 @@ function printScenario(
   }
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP A: Spread Calculation
-// ---------------------------------------------------------------------------
-
 function runSpreadScenarios(tracker: DailyLimitTracker): void {
   printHeader(
     `REQUIREMENT A: Spread Calculation` +
@@ -127,10 +114,7 @@ function runSpreadScenarios(tracker: DailyLimitTracker): void {
   );
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP B: Daily Trading Limits
-// ---------------------------------------------------------------------------
-
 function runDailyLimitScenarios(): void {
   printHeader(
     `REQUIREMENT B: Daily Trading Limits` +
@@ -214,10 +198,7 @@ function runDailyLimitScenarios(): void {
   );
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP C: Edge Cases
-// ---------------------------------------------------------------------------
-
 function runEdgeCaseScenarios(): void {
   printHeader("EDGE CASES & COMBINED SCENARIOS");
   const tracker = new DailyLimitTracker();
@@ -275,10 +256,7 @@ function runEdgeCaseScenarios(): void {
   );
 }
 
-// ---------------------------------------------------------------------------
 // MAIN
-// ---------------------------------------------------------------------------
-
 function main(): void {
   console.log("╔════════════════════════════════════════════════════════════╗");
   console.log("║  GOLD TRADING ORDER VALIDATION — Part 3 Demo             ║");

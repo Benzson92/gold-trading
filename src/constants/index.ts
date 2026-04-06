@@ -1,17 +1,3 @@
-// ============================================================================
-// constants/index.ts — The Rule Book's Table of Contents
-// ============================================================================
-// Chef Analogy: Instead of flipping through five different laminated
-// cards on the wall, the head chef has ONE master rule book with tabs.
-// Open to "Quantity" → portion rules. Open to "Spread" → markup rules.
-//
-// BARREL EXPORT PATTERN:
-//   Consumers import from "src/constants" — they don't need to know
-//   which specific file holds which constant. If we reorganize the
-//   internal files, imports don't break.
-//
-//   import { MIN_QUANTITY, SPREAD_MARGIN_PERCENT } from "../constants";
-// ============================================================================
 
 export {
   MIN_QUANTITY,

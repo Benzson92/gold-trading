@@ -1,10 +1,4 @@
-// ============================================================================
-// validate-order.test.ts — Quality Assurance Spot Checks
-// ============================================================================
-// HOW TO RUN:  npx jest validate-order.test.ts
-// ============================================================================
 
-// --- Internal Modules ---
 import { OrderType } from "../types";
 import { validateOrder } from "../validate-order-extended";
 import { DailyLimitTracker } from "../models";
@@ -15,10 +9,7 @@ import {
 } from "../constants";
 import { validateDailyLimit } from "../validators";
 
-// ============================================================================
 // REQUIREMENT A: Spread Calculation
-// ============================================================================
-
 describe("Spread Calculation", () => {
   describe("calculateSpread", () => {
     it("computes correct expected buy price with 0.5% margin", () => {
@@ -166,10 +157,7 @@ describe("Spread Calculation", () => {
   });
 });
 
-// ============================================================================
 // REQUIREMENT B: Daily Trading Limits
-// ============================================================================
-
 describe("Daily Trading Limits", () => {
   describe("DailyLimitTracker", () => {
     it("starts with zero for unknown customers", () => {

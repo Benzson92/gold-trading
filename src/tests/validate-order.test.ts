@@ -1,24 +1,6 @@
-// ============================================================================
-// validate-order.test.ts — The Quality Assurance Inspector
-// ============================================================================
-// Adapted to the CURRENT implementation:
-//   - jest.mock controls findCustomerById & getCurrentMarketPrice
-//     (no setMockCustomer / setMockMarketPrice helpers exist)
-//   - Error codes match what each validator actually produces
-//   - Customer balances match mock-customers.data.ts
-//   - Unknown customer → pipeline returns INVALID_TYPE (not silently skipped)
-// ============================================================================
 
 import { validateOrder } from "../validate-order";
 import { OrderType, ValidationErrorCode } from "../types";
-
-// ---------------------------------------------------------------------------
-// Mock the data layer — intercept findCustomerById & getCurrentMarketPrice
-// ---------------------------------------------------------------------------
-// We mock the entire "../data" module so every call inside validateOrder
-// goes through our controlled versions. This avoids needing setter functions
-// in production code.
-// ---------------------------------------------------------------------------
 
 import * as dataModule from "../data";
 
@@ -36,11 +18,6 @@ const mockGetMarketPrice =
     typeof dataModule.getCurrentMarketPrice
   >;
 
-// ---------------------------------------------------------------------------
-// Test Helpers — Reusable "recipe templates" for common test scenarios
-// ---------------------------------------------------------------------------
-
-/** A perfectly valid buy order — the "reference dish" all tests modify from */
 function validBuyOrder() {
   return {
     customer_id: "C001",
@@ -50,7 +27,6 @@ function validBuyOrder() {
   };
 }
 
-/** A perfectly valid sell order */
 function validSellOrder() {
   return {
     customer_id: "C001",
@@ -60,18 +36,13 @@ function validSellOrder() {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Reset mocks before each test to avoid test pollution
-// ---------------------------------------------------------------------------
 beforeEach(() => {
-  // Default market price for most tests
   mockGetMarketPrice.mockReturnValue({
     buy_price: 30_400,
     sell_price: 30_300,
     timestamp: new Date(),
   });
 
-  // Default customer lookup — mirrors mock-customers.data.ts
   mockFindCustomer.mockImplementation((id: string) => {
     const customers: Record<
       string,
@@ -85,10 +56,7 @@ beforeEach(() => {
   });
 });
 
-// =========================================================================
-// GROUP 1: HAPPY PATHS — "The dishes that should pass quality inspection"
-// =========================================================================
-
+// GROUP 1: HAPPY PATHS 
 describe("Happy Paths — Valid Orders", () => {
   test("accepts a valid buy order with exact market buy price", () => {
     const result = validateOrder(validBuyOrder());
@@ -150,10 +118,7 @@ describe("Happy Paths — Valid Orders", () => {
   });
 });
 
-// =========================================================================
 // GROUP 2: ORDER TYPE VALIDATION — "Only 'buy' or 'sell' allowed"
-// =========================================================================
-
 describe("Order Type Validation", () => {
   test("rejects invalid order_type 'trade'", () => {
     const order = { ...validBuyOrder(), order_type: "trade" };
@@ -199,10 +164,7 @@ describe("Order Type Validation", () => {
   });
 });
 
-// =========================================================================
-// GROUP 3: QUANTITY VALIDATION — "Portions must be right"
-// =========================================================================
-
+// GROUP 3: QUANTITY VALIDATION
 describe("Quantity Validation", () => {
   test("rejects negative quantity", () => {
     const order = { ...validBuyOrder(), quantity: -1.0 };
@@ -328,10 +290,7 @@ describe("Quantity Validation", () => {
   });
 });
 
-// =========================================================================
-// GROUP 4: PRICE VALIDATION — "The price must be right"
-// =========================================================================
-
+// GROUP 4: PRICE VALIDATION 
 describe("Price Validation", () => {
   test("rejects negative price", () => {
     const order = { ...validBuyOrder(), quoted_price: -100 };
@@ -377,10 +336,7 @@ describe("Price Validation", () => {
   });
 });
 
-// =========================================================================
 // GROUP 5: BALANCE VALIDATION — "Can the customer afford this?"
-// =========================================================================
-
 describe("Balance Validation", () => {
   test("rejects buy order when balance is insufficient", () => {
     // C002 has 10,000 THB, but 1 × 30,400 = 30,400 THB needed
@@ -413,8 +369,6 @@ describe("Balance Validation", () => {
   });
 
   test("returns INVALID_TYPE error for unknown customer", () => {
-    // validateOrder explicitly creates an INVALID_TYPE error when
-    // findCustomerById returns undefined
     const order = { ...validBuyOrder(), customer_id: "UNKNOWN" };
     const result = validateOrder(order);
 
@@ -466,10 +420,7 @@ describe("Balance Validation", () => {
   });
 });
 
-// =========================================================================
 // GROUP 6: PRICE FRESHNESS — "Is the price still current?"
-// =========================================================================
-
 describe("Price Freshness Validation", () => {
   test("rejects price more than 2% above market buy price", () => {
     // 30,400 × 1.025 ≈ 31,160 — exceeds 2% threshold
@@ -529,10 +480,7 @@ describe("Price Freshness Validation", () => {
   });
 });
 
-// =========================================================================
 // GROUP 7: MISSING FIELDS — "The order ticket is incomplete"
-// =========================================================================
-
 describe("Missing Fields", () => {
   test("rejects order with no fields", () => {
     const result = validateOrder({});
@@ -576,10 +524,7 @@ describe("Missing Fields", () => {
   });
 });
 
-// =========================================================================
 // GROUP 8: SECURITY & EDGE CASES — "Can someone break the system?"
-// =========================================================================
-
 describe("Security & Edge Cases", () => {
   test("handles null input without crashing", () => {
     const result = validateOrder(null);
@@ -723,10 +668,7 @@ describe("Security & Edge Cases", () => {
   });
 });
 
-// =========================================================================
 // GROUP 9: BOUNDARY VALUE TESTING — "Testing the exact edges"
-// =========================================================================
-
 describe("Boundary Values", () => {
   test("accepts exact balance match (cost = balance exactly)", () => {
     mockFindCustomer.mockImplementation((id: string) => {

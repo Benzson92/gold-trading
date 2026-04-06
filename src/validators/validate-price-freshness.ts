@@ -1,15 +1,3 @@
-// ============================================================================
-// validate-price-freshness.ts — Station 5: The Price Freshness Check
-// ============================================================================
-// Chef Analogy: You ordered wagyu at $150/kg from the supplier's catalog.
-// By the time your purchase order reaches them, the price shifted to $160/kg.
-// If the gap is too large (>2%), the kitchen rejects the order — you don't
-// want to commit to a price that no longer reflects reality.
-//
-// The market has two prices — buy_price (what the dealer sells to you) and
-// sell_price (what the dealer buys from you). We compare the quoted price
-// against whichever side the order is on.
-// ============================================================================
 
 import {
   ValidatedOrder,
@@ -28,9 +16,6 @@ export function validatePriceFreshness(
 ): ValidationError | null {
   const quoted = new BigNumber(order.quoted_price);
 
-  // Pick the relevant market price based on order type:
-  // BUY → dealer's buy_price (what the customer pays)
-  // SELL → dealer's sell_price (what the customer receives)
   const relevantPrice =
     order.order_type === OrderType.BUY
       ? new BigNumber(marketPrice.buy_price)

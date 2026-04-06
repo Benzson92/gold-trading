@@ -1,17 +1,6 @@
-// ============================================================================
-// validate-balance.ts — Station 4: The Credit Check Station
-// ============================================================================
-// Chef Analogy: Before the kitchen fires a ฿5,000 dish, the cashier
-// checks the customer's tab: "Do they have enough credit?"
-//
-// BUY orders:  Need enough THB to cover price × quantity
-// SELL orders: Need enough gold holdings to fulfill the sale
-// ============================================================================
 
-// --- External Libraries ---
 import BigNumber from "bignumber.js";
 
-// --- Internal Modules: Types ---
 import {
   ValidatedOrder,
   OrderType,
@@ -19,10 +8,6 @@ import {
   ValidationError,
   ValidationErrorCode,
 } from "../types";
-
-// ---------------------------------------------------------------------------
-// validateBalance — Check sufficient funds or holdings
-// ---------------------------------------------------------------------------
 
 export function validateBalance(
   order: ValidatedOrder,

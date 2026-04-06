@@ -1,26 +1,6 @@
-// ============================================================================
-// demo.ts — The Soft Launch Night (Run This File)
-// ============================================================================
-// Chef Analogy: Before a restaurant opens to the public, the staff runs
-// a "soft launch" — friends and family come in, order from the full menu,
-// and the kitchen handles real tickets end-to-end. This file IS that
-// soft launch. It runs every scenario the validation pipeline should
-// handle and prints the results in a clear, readable format.
-//
-// HOW TO RUN:
-//   npx ts-node demo.ts
-//
-//   Or if you prefer tsx (faster, no separate tsconfig needed):
-//   npx tsx demo.ts
-// ============================================================================
 
-// --- Internal Modules ---
 import { OrderType } from "./types";
 import { validateOrder } from "./validate-order";
-
-// ---------------------------------------------------------------------------
-// UTILITIES — Pretty printing helpers
-// ---------------------------------------------------------------------------
 
 function printHeader(title: string): void {
   console.log("\n" + "=".repeat(70));
@@ -52,13 +32,7 @@ function printScenario(
   }
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP A: Happy Path — Valid Orders
-// ---------------------------------------------------------------------------
-// Chef Analogy: These are the regulars who order off the menu correctly.
-// The kitchen should fire these tickets without a hitch.
-// ---------------------------------------------------------------------------
-
 function runHappyPathScenarios(): void {
   printHeader("GROUP A: HAPPY PATH — Valid Orders");
 
@@ -85,15 +59,7 @@ function runHappyPathScenarios(): void {
   printScenario("A2: Valid Sell Order (2.0 baht-weight @ 30,300)", sellOrder, validateOrder(sellOrder));
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP B: Business Rule Violations
-// ---------------------------------------------------------------------------
-// Chef Analogy: These customers ask for things the kitchen can't serve —
-// an item that's 86'd (out of stock), a wrong portion size, or a price
-// from last week's menu. The expeditor catches these before they reach
-// the line cooks.
-// ---------------------------------------------------------------------------
-
 function runBusinessRuleScenarios(): void {
   printHeader("GROUP B: BUSINESS RULE VIOLATIONS");
 
@@ -174,15 +140,7 @@ function runBusinessRuleScenarios(): void {
   );
 }
 
-// ---------------------------------------------------------------------------
 // SCENARIO GROUP C: Edge Cases & Bad Input
-// ---------------------------------------------------------------------------
-// Chef Analogy: These aren't even real food orders — someone handed the
-// expeditor a napkin with doodles on it, or yelled a request in a language
-// nobody speaks. The kitchen must handle these gracefully without crashing
-// (no fires, no broken plates).
-// ---------------------------------------------------------------------------
-
 function runEdgeCaseScenarios(): void {
   printHeader("GROUP C: EDGE CASES & BAD INPUT");
 
@@ -224,10 +182,7 @@ function runEdgeCaseScenarios(): void {
   );
 }
 
-// ---------------------------------------------------------------------------
 // MAIN — Run all scenario groups
-// ---------------------------------------------------------------------------
-
 function main(): void {
   console.log("╔════════════════════════════════════════════════════════════╗");
   console.log("║  GOLD TRADING ORDER VALIDATION — Soft Launch Demo        ║");

@@ -1,13 +1,3 @@
-// ============================================================================
-// types/index.ts — The Type System's Table of Contents
-// ============================================================================
-// BARREL EXPORT PATTERN:
-//   Consumers import from "src/types" without knowing the internal layout.
-//
-//   import { OrderType, CreateOrderDto, ValidationResult } from "../types";
-//
-//   If we split or merge internal files, no import paths break.
-// ============================================================================
 
 export {
   OrderType,
