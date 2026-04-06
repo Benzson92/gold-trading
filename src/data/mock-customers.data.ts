@@ -30,6 +30,11 @@ export const MOCK_CUSTOMERS: Customer[] = [
     name: "Ploy Goldholder",
     balance: 50,
   },
+  {
+    id: "12345",
+    name: "Numeric Niran",
+    balance: 500_000,
+  },
 ];
 
 // ---------------------------------------------------------------------------
