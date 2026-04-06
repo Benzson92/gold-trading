@@ -1,6 +1,7 @@
 
 import isPlainObject from "lodash/isPlainObject";
 import compact from "lodash/compact";
+import isNil from "lodash/isNil";
 
 import {
   CreateOrderDto,
@@ -43,11 +44,11 @@ export function validateOrder(
     };
   }
 
-  const dto = rawInput as CreateOrderDto;
+  const orderData = rawInput as CreateOrderDto;
 
-  const [parsedOrder, structureErrors] = validateInputStructure(dto);
+  const [parsedOrder, structureErrors] = validateInputStructure(orderData);
 
-  if (parsedOrder === null) {
+  if (isNil(parsedOrder)) {
     return { valid: false, errors: structureErrors };
   }
 
