@@ -72,8 +72,10 @@ The BigNumber.js usage for precision would stay too, because the financial accur
 5. Tools: If you used AI tools or other references for any part of this assessment, which parts
 did you use them for? How did you verify the output was correct?
 
-Yes, AI tools (like Claude) were used for scaffolding and thinking through patterns 
-— particularly for the worker thread implementation and the BigNumber.js integration patterns. However, every output was verified by:
+Yes, AI tools (like Claude) were used for scaffolding and thinking through patterns, 
+particularly for the BigNumber.js precision handling and the overall pipeline architecture.
+
+However, every output was verified by:
 
 First, running the actual code and checking outputs manually against known inputs 
 for example, deliberately passing an invalid order and confirming the validator caught it. 
