@@ -53,8 +53,8 @@ What you'd change:
 The current design runs everything in one process sequentially. At thousands of orders per minute, this becomes a bottleneck 
 — like having one chef handle every single plate alone. Here's what would need to evolve:
 
-First, worker threads (already partially introduced) would be expanded into a proper worker pool 
-— a team of chefs working in parallel, each handling their own batch of orders simultaneously.
+First, worker threads would be introduced to allow validations to run in parallel,
+ forming a proper worker pool that can process multiple orders simultaneously.
 
 Second, you'd add a queue system (like Redis or RabbitMQ) so orders don't pile up and crash the server. 
 Think of it like a ticket system at a busy restaurant — orders come in, get queued, and workers pick them up as they're ready.
